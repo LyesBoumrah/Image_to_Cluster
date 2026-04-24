@@ -78,7 +78,121 @@ Difficulté : Facile (~30 minutes)
 ---------------------------------------------------
 **Complétez et documentez ce fichier README.md** pour nous expliquer comment utiliser votre solution.  
 Faites preuve de pédagogie et soyez clair dans vos expliquations et processus de travail.  
-   
+# Atelier From Image to Cluster
+
+## Objectif du projet
+
+Ce projet a pour objectif d’industrialiser le cycle de vie d’une application simple en utilisant des outils d’Infrastructure as Code.
+
+Il consiste à :
+- Construire une image Docker personnalisée avec Packer
+- Déployer cette image sur un cluster Kubernetes K3d
+- Automatiser le déploiement avec Ansible
+
+L’application utilisée est un serveur Nginx contenant un fichier index.html personnalisé.
+
+---
+
+## Architecture
+
+Le projet suit le workflow suivant :
+
+Packer → Image Docker → K3d → Ansible → Kubernetes → Application accessible
+
+---
+
+## Prérequis
+
+Les outils suivants sont nécessaires :
+
+- Docker
+- K3d
+- kubectl
+- Packer
+- Ansible
+- Python avec le module kubernetes
+
+---
+
+## Étapes d’exécution
+
+### 1. Création du cluster K3d
+
+```bash
+k3d cluster create lab --servers 1 --agents 2
+kubectl get nodes
+```
+
+---
+
+### 2. Construction de l’image avec Packer
+
+```bash
+cd packer
+packer init .
+packer build .
+docker images
+docker tag <IMAGE_ID> nginx-custom:latest
+```
+
+---
+
+### 3. Import de l’image dans K3d
+
+```bash
+k3d image import nginx-custom:latest -c lab
+```
+
+---
+
+### 4. Déploiement avec Ansible
+
+```bash
+cd ..
+ansible-galaxy collection install kubernetes.core
+python3 -m pip install kubernetes
+ansible-playbook ansible/deploy.yml -e "ansible_python_interpreter=$(which python3)"
+```
+
+---
+
+## Vérification
+
+```bash
+kubectl get pods
+kubectl get svc
+```
+
+Résultat attendu :
+- Pod nginx-custom en Running
+- Service nginx-custom-service en NodePort
+
+---
+
+## Accès à l’application
+
+```bash
+kubectl port-forward svc/nginx-custom-service 8081:80
+```
+
+Puis dans GitHub Codespaces :
+- Onglet PORTS
+- Rendre le port 8081 public
+- Ouvrir l’URL
+
+---
+
+## Choix techniques
+
+- Packer : création d’image Docker reproductible
+- Ansible : automatisation du déploiement Kubernetes
+- K3d : cluster Kubernetes léger en local
+
+---
+
+## Conclusion
+
+Ce projet démontre l’automatisation complète du déploiement d’une application, de la création de son image jusqu’à son exécution sur Kubernetes avec des outils d’Infrastructure as Code.   
 ---------------------------------------------------
 Evaluation
 ---------------------------------------------------
